@@ -12,7 +12,7 @@ from string import punctuation
 from urllib.parse import urlsplit
 from urllib3.exceptions import HTTPError
 
-from .http import http
+from .http_client import http
 from .llm_analyst import LLMSEOEnhancer
 from .stopwords import ENGLISH_STOP_WORDS
 
@@ -264,7 +264,13 @@ class Page:
         soup_lower = BeautifulSoup(html_without_comments.lower(), "html.parser")
         soup_unmodified = BeautifulSoup(html_without_comments, "html.parser")
 
-        self.process_text(self.content["text"])
+        # Check if content extraction was successful before processing
+        if self.content and "text" in self.content:
+            self.process_text(self.content["text"])
+        else:
+            self.warn("Failed to extract content from the page")
+            # Set empty content to avoid further errors
+            self.content = {"text": ""}
 
         self.analyze_title()
         self.analyze_description()

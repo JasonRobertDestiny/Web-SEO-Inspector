@@ -3,7 +3,7 @@ from urllib.parse import urlsplit
 from xml.dom import minidom
 import socket
 
-from .http import http
+from .http_client import http
 from .page import Page
 
 

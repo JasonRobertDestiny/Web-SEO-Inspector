@@ -1,155 +1,779 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>seo analysis</title>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-	<script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
-	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-	<style>
-	th {
-		cursor: pointer;
-	}
-	td{
-		word-break:break-word;
-	}
-	</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO智能分析助手</title>
+    
+    <!-- Modern CSS Framework -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="seo_styles.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-shadow { box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .alert-critical { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .todo-item { transition: all 0.3s ease; }
+        .todo-item:hover { transform: translateX(5px); }
+        .metric-card { transition: all 0.3s ease-in-out; }
+        .metric-card:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease-in-out;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .pulse-success {
+            animation: pulseSuccess 0.6s ease-in-out;
+        }
+        
+        @keyframes pulseSuccess {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .input-focus {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .input-focus:focus {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+    </style>
 </head>
-<body>
-	<div class="container">
-		<div class="page-header">
-			<h1>python-seo-analyzer results</h1>
-		</div>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-search-plus text-2xl"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">SEO智能分析助手</h1>
+                        <p class="text-sm opacity-90">AI驱动的SEO分析、预警与优化建议系统</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- URL输入框 -->
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                        <div class="relative flex-1">
+                            <input type="url" id="urlInput" placeholder="输入要分析的URL (例如: https://example.com)" 
+                                   class="input-focus px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 w-full transition-all duration-200">
+                            <div id="urlValidation" class="absolute right-3 top-1/2 transform -translate-y-1/2 hidden">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                            </div>
+                            <div id="urlError" class="absolute top-full left-0 mt-1 text-xs text-red-500 hidden"></div>
+                        </div>
+                        <button id="analyzeBtn" class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 transition-all duration-200 w-full sm:w-auto">
+                            <i class="fas fa-search" id="analyzeIcon"></i>
+                            <span id="analyzeText">分析</span>
+                        </button>
+                    </div>
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                        <button id="refreshBtn" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-all w-full sm:w-auto flex items-center justify-center space-x-1">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>刷新</span>
+                        </button>
+                        <button id="exportBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg w-full sm:w-auto flex items-center justify-center space-x-1">
+                            <i class="fas fa-download"></i>
+                            <span>导出</span>
+                        </button>
+                    </div>
+                </div>
+                </div>
+            </div>
+            
+            <!-- 使用指南 -->
+            <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-sm font-medium text-blue-900 mb-1">使用指南</h4>
+                        <ul class="text-xs text-blue-700 space-y-1">
+                            <li>• 输入完整的URL地址（包含 http:// 或 https://）</li>
+                            <li>• 分析过程需要10-30秒，请耐心等待</li>
+                            <li>• 工具会检查页面的SEO元素、关键词密度和技术问题</li>
+                            <li>• 分析完成后可查看详细报告和优化建议</li>
+                        </ul>
+                    </div>
+                    <button id="hideGuide" class="text-blue-400 hover:text-blue-600 text-xs">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+    
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-md mx-4">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2" id="loadingTitle">正在分析中...</h3>
+                <p class="text-sm text-gray-600 mb-4" id="loadingMessage">正在获取页面内容并进行SEO分析</p>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" id="loadingProgress" style="width: 0%"></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2" id="loadingStep">步骤 1/4: 连接到网站</p>
+            </div>
+        </div>
+    </div>
 
-		{%if result['fatal_error']%}
-		<p>There was a fatal error when trying to format the output file as a webpage. Confirm that there is an output.json file in the directory. If not, you can reference the 
-			<a href="https://github.com/sethblack/python-seo-analyzer">python-seo-analyzer documentation</a></p>
-			{% else %}
-			<p>total time: {{result['total_time']|round(2)}} seconds </p>
-			<div>
-				<h2>go to:</h2>
-				<ul>
-					<li><a href="#page-section">page analysis</a></li>
-					<li><a href="#keyword-section">keyword analysis</a></li>
-					<li><a href="https://github.com/sethblack/python-seo-analyzer">GitHub</a></li>
-				</ul>
-			</div>
+    <div class="container mx-auto px-6 py-8">
+        <!-- SEO预警系统 -->
+        <div id="seoAlerts" class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                SEO预警与警告
+            </h2>
+            <div id="alertsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle mr-3 text-lg"></i>
+                        <div>
+                            <h4 class="font-bold">系统就绪</h4>
+                            <p class="text-sm">请输入URL开始SEO分析</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SEO评分和概览 -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-chart-line text-blue-500 mr-2"></i>
+                关键SEO指标
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 lg:gap-6 fade-in">
+                <div class="metric-card card-hover bg-white p-6 rounded-lg card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">页面总数</p>
+                            <p class="text-3xl font-bold text-blue-600" id="totalPages">0</p>
+                        </div>
+                        <i class="fas fa-file-alt text-blue-500 text-2xl"></i>
+                    </div>
+                </div>
+                
+                <div class="metric-card bg-white p-6 rounded-lg card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">关键词总数</p>
+                            <p class="text-3xl font-bold text-green-600" id="totalKeywords">0</p>
+                        </div>
+                        <i class="fas fa-key text-green-500 text-2xl"></i>
+                    </div>
+                </div>
+                
+                <div class="metric-card bg-white p-6 rounded-lg card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">发现问题</p>
+                            <p class="text-3xl font-bold text-red-600" id="totalIssues">0</p>
+                        </div>
+                        <i class="fas fa-bug text-red-500 text-2xl"></i>
+                    </div>
+                </div>
+                
+                <div class="metric-card bg-white p-6 rounded-lg card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">SEO评分</p>
+                            <p class="text-3xl font-bold text-purple-600" id="seoScore">--</p>
+                        </div>
+                        <i class="fas fa-star text-purple-500 text-2xl"></i>
+                    </div>
+                </div>
+                
+                <div class="metric-card bg-white p-6 rounded-lg card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">分析时间</p>
+                            <p class="text-3xl font-bold text-indigo-600" id="analysisTime">--</p>
+                        </div>
+                        <i class="fas fa-clock text-indigo-500 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-			{% if result['errors']%}
-			<h2>errors:</h2>
-			<ul>
-				{% for e in result['errors'] %}
-				<li>{{e}}</li>
-				{% endfor %}
-			</ul>
-			{% endif %}
+        <!-- SEO建议系统 -->
+        <div id="recommendationsSection" class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                SEO优化建议
+            </h2>
+            <div class="bg-white rounded-lg card-shadow p-6 card-hover fade-in">
+                <div id="recommendationsContainer">
+                    <p class="text-gray-600">请先进行SEO分析以获取优化建议</p>
+                </div>
+            </div>
+        </div>
 
-			{% if result['pages'] %}
-			<h2 id="page-section">page analysis:</h2>
-			<input type="button" value="hide all notices " onclick="toggleDetail()" class="btn btn-info" id="ebutton">
+        <!-- TODO List -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-tasks text-indigo-500 mr-2"></i>
+                SEO行动清单
+            </h2>
+            <div class="bg-white rounded-lg card-shadow p-6 card-hover fade-in">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-2 sm:space-y-0">
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+                        <button id="addTodoBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center space-x-2 w-full sm:w-auto">
+                            <i class="fas fa-plus"></i>
+                            <span>添加任务</span>
+                        </button>
+                        <button id="clearCompletedBtn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center space-x-2 w-full sm:w-auto">
+                            <i class="fas fa-trash"></i>
+                            <span>清除已完成</span>
+                        </button>
+                    </div>
+                    <div class="text-sm text-gray-600 w-full sm:w-auto text-center sm:text-right">
+                        <span id="todoStats">0 个待完成任务</span>
+                    </div>
+                </div>
+                <div id="todoContainer">
+                    <!-- TODO items will be populated by JavaScript -->
+                </div>
+                
+                <!-- Add Todo Form -->
+                <div id="addTodoForm" class="hidden mt-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="flex space-x-2">
+                        <input type="text" id="todoInput" placeholder="输入SEO任务..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <select id="todoPriority" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="low">低</option>
+                            <option value="medium" selected>中</option>
+                            <option value="high">高</option>
+                        </select>
+                        <button id="saveTodoBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-save"></i>
+                        </button>
+                        <button id="cancelTodoBtn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-			<div class="table-responsive">
-			<table id="pages" class="table table-striped table-hover">
-				<thead>
-					<tr>
-						<th></th>
-						<th>page</th>
-						<th>word count</th>
-						<th>number of notices</th>
-					</tr>
-				</thead>
+        <!-- Page Analysis -->
+        <div id="pageAnalysisSection" class="mb-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-file-alt text-blue-500 mr-2"></i>
+                页面分析
+            </h2>
+            <div class="bg-white rounded-lg card-shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">页面</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">字数统计</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">问题</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pageTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Content will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-				<tbody>
-				{% for page in result['pages']%}
-				{% set outer_loop = loop %}
-				<tr onclick="fullerrors({{ outer_loop.index }})">
-					<td><i class="material-icons" id="i{{ outer_loop.index }}">keyboard_arrow_down</i></td>
-					<td><a href="{{ page['url'] }}" target ="_blank">{{page['url']}}</a></td>
-					<td>{{page['word_count']}}</td>
-					<td>{{page["warnings"]|length}}</td>
-				</tr>
-				<tr id="{{ outer_loop.index }}" class="error-detail">
-					<td colspan="4"><p>{{page["title"]}}</p><p>{{page["description"]}}</p><ul>{% for err in page["warnings"] %}<li>{{err|e}}</li>{% endfor %}</ul></td>
-				</tr>
-				{% endfor %}
-			</tbody>
-			</table>
-			</div>
+        <!-- Keyword Analysis -->
+        <div id="keywordAnalysisSection" class="mb-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-key text-green-500 mr-2"></i>
+                关键词分析
+            </h2>
+            <div class="bg-white rounded-lg card-shadow p-6">
+                <div class="mb-4">
+                    <canvas id="keywordChart" width="400" height="200"></canvas>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(0)">
+                                    关键词 <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(1)">
+                                    出现次数 <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    密度
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="keywordTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Content will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-			{% endif %}
+    <!-- Page Details Modal -->
+    <div id="pageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-4xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-900" id="modalTitle">页面详情</h3>
+                        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div id="modalContent">
+                        <!-- Content will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- SEO Agent JavaScript -->
+    <script src="seo_agent.js"></script>
+    
+    <script>
+        // Global data
+        let pagesData = [];
+        let keywordsData = [];
+        let currentAnalysisResult = null;
+        let seoAgent;
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            seoAgent = new SEOAgent();
+            setupEventListeners();
+        });
 
-			{% if result['keywords'] %}
-			<h2 id="keyword-section">keyword analysis:</h2>
-			<div class="table-responsive">
-			<table id = "keywords" class="table table-striped">
-				<thead>
-					<tr>
-						<th class="sortable_th">keywords</th>
-						<th class="sortable_th">count</th>
-					</tr>
-				</thead>
-				<tbody>
-				{% for key in result['keywords']%}
-				<tr>
-					<td> {{ key['word'] }} </td>
-					<td> {{ key['count'] }} </td>
-				</tr>
+        function setupEventListeners() {
+            // Analyze button
+            document.getElementById('analyzeBtn').addEventListener('click', performAnalysis);
+            
+            // Enter key in URL input
+            document.getElementById('urlInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performAnalysis();
+                }
+            });
+            
+            // Refresh button
+            document.getElementById('refreshBtn').addEventListener('click', function() {
+                location.reload();
+            });
+            
+            // Export button
+            document.getElementById('exportBtn').addEventListener('click', exportResults);
+        }
 
-				{% endfor %}
-			</tbody>
-			</table>
-		</div>
-			{% endif %}
-			{% endif %}
-		</div>
+        async function performAnalysis() {
+            const url = document.getElementById('urlInput').value.trim();
+            if (!url) {
+                alert('请输入要分析的URL');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('分析请求失败');
+                }
+                
+                const result = await response.json();
+                currentAnalysisResult = result;
+                
+                // Update UI with results
+                updateAnalysisResults(result);
+                
+            } catch (error) {
+                console.error('Analysis error:', error);
+                alert('分析失败: ' + error.message);
+            } finally {
+                // Hide loading
+                document.getElementById('loadingIndicator').classList.add('hidden');
+            }
+        }
 
-		<script type='text/javascript'>
-		var showall = true;
-		function toggleDetail(){
-			if(showall){
-				$(".error-detail").hide();
-				$(".material-icons").text('keyboard_arrow_right');
-				$("#ebutton").val('show all notices');
-				showall = false;
-			}else{
-				$(".error-detail").show();
-				$(".material-icons").text('keyboard_arrow_down');
-				$("#ebutton").val('hide all notices ');
-				showall = true;
-			}
-		}
-		function fullerrors(errorid){
-			var cellid = "#" + errorid;
-			var pressedid = "#i" + errorid;
-			$(cellid).toggle();
+        function updateAnalysisResults(result) {
+            // Update global data
+            pagesData = result.analysis?.pages || [];
+            keywordsData = result.analysis?.keywords || [];
+            
+            // Update metrics
+            document.getElementById('totalPages').textContent = pagesData.length;
+            document.getElementById('totalKeywords').textContent = keywordsData.length;
+            document.getElementById('analysisTime').textContent = '刚刚';
+            
+            // Update alerts
+            updateAlerts(result.seo_insights);
+            
+            // Update recommendations
+            updateRecommendations(result.seo_insights);
+            
+            // Update page analysis table
+            updatePageAnalysis();
+            
+            // Update keyword analysis
+            updateKeywordAnalysis();
+            
+            // Calculate and update SEO score
+            calculateSEOScore();
+        }
 
-			if($(pressedid).html() == 'keyboard_arrow_down'){
-				$(pressedid).text('keyboard_arrow_right');
-			}else{
-				$(pressedid).text('keyboard_arrow_down');
-			}
-		}
-		// https://stackoverflow.com/questions/3160277/jquery-table-sort
-		$(document).ready(function(){
-			$('.sortable_th').click(function(){
-				var table = $(this).parents('table').eq(0)
-				var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
-				this.asc = !this.asc
-				if (!this.asc){rows = rows.reverse()}
-					for (var i = 0; i < rows.length; i++){table.append(rows[i])}
-				})
-			function comparer(index) {
-				return function(a, b) {
-					var valA = getCellValue(a, index), valB = getCellValue(b, index)
-					return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.localeCompare(valB)
-				}
-			}
-			function getCellValue(row, index){ return $(row).children('td').eq(index).text() }
-		});
-		</script>
-	</body>
-	</html>
+        function updateAlerts(seoInsights) {
+            const container = document.getElementById('alertsContainer');
+            container.innerHTML = '';
+            
+            if (seoInsights && seoInsights.issues) {
+                seoInsights.issues.forEach(issue => {
+                    const alertElement = createAlertElement({
+                        type: issue.severity,
+                        title: issue.type,
+                        message: issue.description,
+                        icon: 'fas fa-exclamation-triangle'
+                    });
+                    container.appendChild(alertElement);
+                });
+                
+                document.getElementById('totalIssues').textContent = seoInsights.issues.length;
+            }
+            
+            if (container.children.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle mr-3 text-lg"></i>
+                            <div>
+                                <h4 class="font-bold">分析完成</h4>
+                                <p class="text-sm">未发现严重SEO问题</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function updateRecommendations(seoInsights) {
+            const container = document.getElementById('recommendationsContainer');
+            
+            if (seoInsights && seoInsights.recommendations && seoInsights.recommendations.length > 0) {
+                const list = document.createElement('ul');
+                list.className = 'space-y-3';
+                
+                seoInsights.recommendations.forEach(rec => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-start space-x-3 p-3 bg-gray-50 rounded-lg';
+                    li.innerHTML = `
+                        <i class="fas fa-lightbulb text-yellow-500 mt-1"></i>
+                        <div>
+                            <h4 class="font-medium text-gray-900">${rec.recommendation}</h4>
+                            <p class="text-sm text-gray-600">${rec.url}</p>
+                            <span class="inline-block mt-2 px-2 py-1 text-xs bg-${rec.priority === 'high' ? 'red' : 'yellow'}-100 text-${rec.priority === 'high' ? 'red' : 'yellow'}-800 rounded">${rec.priority}</span>
+                        </div>
+                    `;
+                    list.appendChild(li);
+                });
+                
+                container.innerHTML = '';
+                container.appendChild(list);
+            } else {
+                container.innerHTML = '<p class="text-gray-600">暂无优化建议，您的SEO表现良好！</p>';
+            }
+        }
+
+        function updatePageAnalysis() {
+            if (pagesData.length === 0) return;
+            
+            const section = document.getElementById('pageAnalysisSection');
+            const tbody = document.getElementById('pageTableBody');
+            
+            tbody.innerHTML = '';
+            
+            pagesData.forEach((page, index) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors';
+                
+                const warningsCount = page.warnings ? page.warnings.length : 0;
+                const statusClass = warningsCount === 0 ? 'green' : warningsCount <= 2 ? 'yellow' : 'red';
+                const statusText = warningsCount === 0 ? '良好' : warningsCount <= 2 ? '需要关注' : '严重';
+                const statusIcon = warningsCount === 0 ? 'check' : warningsCount <= 2 ? 'exclamation-triangle' : 'times-circle';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div>
+                            <a href="${page.url}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium">${page.url}</a>
+                            <p class="text-sm text-gray-600 mt-1">${page.title || 'No title'}</p>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${page.word_count || 0}</td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${statusClass}-100 text-${statusClass}-800">
+                            ${warningsCount} 个问题
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${statusClass}-100 text-${statusClass}-800">
+                            <i class="fas fa-${statusIcon} mr-1"></i>${statusText}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <button onclick="showPageDetails(${index})" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
+                            <i class="fas fa-eye mr-1"></i>查看详情
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            section.classList.remove('hidden');
+        }
+
+        function updateKeywordAnalysis() {
+            if (keywordsData.length === 0) return;
+            
+            const section = document.getElementById('keywordAnalysisSection');
+            const tbody = document.getElementById('keywordTableBody');
+            
+            tbody.innerHTML = '';
+            
+            keywordsData.slice(0, 20).forEach(keyword => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors';
+                
+                const maxCount = keywordsData[0].count;
+                const percentage = ((keyword.count / maxCount) * 100).toFixed(1);
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-sm font-medium text-gray-900">${keyword.word}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${keyword.count}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: ${percentage}%"></div>
+                            </div>
+                            <span class="text-sm text-gray-600">${percentage}%</span>
+                        </div>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            // Initialize keyword chart
+            initializeKeywordChart();
+            
+            section.classList.remove('hidden');
+        }
+
+        function createAlertElement(alert) {
+            const div = document.createElement('div');
+            const alertClass = alert.type === 'critical' || alert.type === 'high' ? 'alert-critical bg-red-100 border-red-400 text-red-700' : 
+                              alert.type === 'warning' || alert.type === 'medium' ? 'bg-yellow-100 border-yellow-400 text-yellow-700' : 
+                              'bg-blue-100 border-blue-400 text-blue-700';
+            
+            div.className = `${alertClass} border px-4 py-3 rounded-lg`;
+            div.innerHTML = `
+                <div class="flex items-center">
+                    <i class="${alert.icon} mr-3 text-lg"></i>
+                    <div>
+                        <h4 class="font-bold">${alert.title}</h4>
+                        <p class="text-sm">${alert.message}</p>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function initializeKeywordChart() {
+            if (keywordsData.length === 0) return;
+            
+            const ctx = document.getElementById('keywordChart').getContext('2d');
+            const topKeywords = keywordsData.slice(0, 10);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topKeywords.map(k => k.word),
+                    datasets: [{
+                        label: 'Keyword Frequency',
+                        data: topKeywords.map(k => k.count),
+                        backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function calculateSEOScore() {
+            let score = 100;
+            let totalIssues = 0;
+            
+            pagesData.forEach(page => {
+                if (page.warnings) {
+                    totalIssues += page.warnings.length;
+                }
+                if (page.word_count && page.word_count < 300) {
+                    score -= 5;
+                }
+            });
+            
+            score -= Math.min(totalIssues * 2, 50);
+            score = Math.max(score, 0);
+            
+            document.getElementById('seoScore').textContent = score;
+            
+            // Update color based on score
+            const scoreElement = document.getElementById('seoScore');
+            scoreElement.className = scoreElement.className.replace(/text-\w+-600/g, '');
+            if (score >= 80) {
+                scoreElement.className += ' text-green-600';
+            } else if (score >= 60) {
+                scoreElement.className += ' text-yellow-600';
+            } else {
+                scoreElement.className += ' text-red-600';
+            }
+        }
+
+        function showPageDetails(pageIndex) {
+            const page = pagesData[pageIndex];
+            const modal = document.getElementById('pageModal');
+            const title = document.getElementById('modalTitle');
+            const content = document.getElementById('modalContent');
+            
+            title.textContent = `页面详情: ${page.url}`;
+            
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-bold text-gray-900">标题</h4>
+                        <p class="text-gray-700">${page.title || '未找到标题'}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-900">描述</h4>
+                        <p class="text-gray-700">${page.description || '未找到描述'}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-900">字数统计</h4>
+                        <p class="text-gray-700">${page.word_count || 0} 个字</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-900">问题 (${page.warnings ? page.warnings.length : 0})</h4>
+                        ${page.warnings && page.warnings.length > 0 ? 
+                            '<ul class="list-disc list-inside text-gray-700 space-y-1">' + 
+                            page.warnings.map(warning => `<li>${warning}</li>`).join('') + 
+                            '</ul>' : 
+                            '<p class="text-green-600">未发现问题！</p>'
+                        }
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+        
+        function closeModal() {
+            document.getElementById('pageModal').classList.add('hidden');
+        }
+
+        function sortTable(columnIndex) {
+            const table = document.getElementById('keywordTableBody');
+            const rows = Array.from(table.rows);
+            
+            rows.sort((a, b) => {
+                const aVal = a.cells[columnIndex].textContent.trim();
+                const bVal = b.cells[columnIndex].textContent.trim();
+                
+                if (columnIndex === 1) { // Count column
+                    return parseInt(bVal) - parseInt(aVal);
+                } else { // Keyword column
+                    return aVal.localeCompare(bVal);
+                }
+            });
+            
+            rows.forEach(row => table.appendChild(row));
+        }
+
+        function exportResults() {
+            if (!currentAnalysisResult) {
+                alert('请先进行SEO分析');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(currentAnalysisResult, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'seo-analysis-result.json';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                seoAgent.showAddTodoForm();
+            }
+            if (e.key === 'Escape') {
+                seoAgent.hideAddTodoForm();
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
