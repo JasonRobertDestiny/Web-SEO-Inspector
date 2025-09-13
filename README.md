@@ -1,30 +1,80 @@
-Python SEO and GEO Analyzer
-===========================
+# Web SEO Inspector
 
 [![PyPI version](https://badge.fury.io/py/pyseoanalyzer.svg)](https://badge.fury.io/py/pyseoanalyzer)
 [![Docker Pulls](https://img.shields.io/docker/pulls/sethblack/python-seo-analyzer.svg)](https://hub.docker.com/r/sethblack/python-seo-analyzer)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A modern SEO and GEO (Generative AI Engine Optimization or better AI Search Optimization) analysis tool that combines technical optimization and authentic human value. Beyond traditional site crawling and structure analysis, it uses AI to evaluate content's expertise signals, conversational engagement, and cross-platform presence. It helps you maintain strong technical foundations while ensuring your site demonstrates genuine authority and value to real users.
+🔍 **A comprehensive SEO analysis tool with AI-powered insights and modern web interface**
 
-The AI features were heavily influenced by the clickbait-titled SEL article [A 13-point roadmap for thriving in the age of AI search](https://searchengineland.com/seo-roadmap-ai-search-449199).
+Web SEO Inspector is a modern SEO and GEO (Generative AI Engine Optimization) analysis tool that combines technical optimization with AI-driven content evaluation. It provides both command-line analysis and a beautiful web interface for comprehensive website optimization.
 
-Note About Python
------------------
+## 📋 Table of Contents
 
-I've written quite a bit about the speed of Python and how there are very specific use cases where it isn't the best choice. I feel like crawling websites is definitely one of those cases. I wrote this tool in Python around 2010 to solve the very specific need of crawling some small HTML-only websites for startups I was working at. I'm excited to see how much it has grown and how many people are using it. I feel like Python SEO Analyzer is acceptable for most smaller use cases, but if you are looking for something better, I've built a much faster and more comprehensive tool [Black SEO Analyzer](https://github.com/sethblack/black-seo-analyzer).
+- [✨ Key Features](#-key-features)
+- [🚀 Quick Start](#-quick-start)
+- [📦 Installation](#-installation)
+- [💻 Command Line Interface](#-command-line-interface)
+- [🔧 Python API](#-python-api)
+- [🤖 AI-Powered Analysis](#-ai-powered-analysis)
+- [⚙️ Configuration](#️-configuration)
+- [🔧 Troubleshooting](#-troubleshooting)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
 
--Seth
+## ✨ Key Features
 
-Installation
-------------
+- 🤖 **AI-Powered Analysis**: Uses Anthropic's Claude to evaluate content quality and provide optimization recommendations
+- 🌐 **Web Interface**: Modern, responsive dashboard for interactive SEO analysis
+- 📊 **Comprehensive Reports**: Technical SEO, content analysis, and performance metrics
+- 🎯 **Smart Recommendations**: Actionable insights with priority-based task management
+- 📈 **Real-time Scoring**: Dynamic SEO score calculation with visual indicators
+- 🔗 **Link Analysis**: Internal and external link evaluation
+- 📱 **Mobile-Friendly**: Responsive design for analysis on any device
+- 🐳 **Docker Support**: Easy deployment with containerization
+- 📋 **Export Options**: Multiple output formats (JSON, HTML, CSV)
 
-### PIP
+The AI features are influenced by modern SEO best practices and the evolving landscape of AI search optimization.
 
+## 🚀 Quick Start
+
+### Web Interface (Recommended)
+
+1. **Install the package**:
+   ```bash
+   pip install pyseoanalyzer
+   ```
+
+2. **Start the web server**:
+   ```bash
+   python -m pyseoanalyzer.api
+   ```
+
+3. **Open your browser** and navigate to `http://localhost:5000`
+
+4. **Analyze any website** by entering the URL in the web interface
+
+### Command Line Usage
+
+```bash
+# Basic analysis
+python-seo-analyzer https://example.com
+
+# With AI analysis (requires ANTHROPIC_API_KEY)
+python-seo-analyzer https://example.com --run-llm-analysis
+
+# Generate HTML report
+python-seo-analyzer https://example.com --output-format html
 ```
+
+## 📦 Installation
+
+### 🐍 Python Package
+
+```bash
 pip install pyseoanalyzer
 ```
 
-### Docker
+### 🐳 Docker
 
 #### Using the Pre-built Image from Docker Hub
 
@@ -89,76 +139,196 @@ docker run --rm -v "$(pwd):/app/output" my-seo-analyzer /bin/sh -c "python-seo-a
 # Adjust Windows commands as needed (see volume mounting example above)
 ```
 
-Command-line Usage
-------------------
+## 💻 Command Line Interface
 
-If you run without a sitemap it will start crawling at the homepage.
+### Basic Usage
 
-```sh
-python-seo-analyzer http://www.domain.com/
+If you run without a sitemap, it will start crawling from the homepage:
+
+```bash
+python-seo-analyzer https://www.example.com/
 ```
 
-Or you can specify the path to a sitmap to seed the urls to scan list.
+### Advanced Options
 
-```sh
-seoanapython-seo-analyzerlyze http://www.domain.com/ --sitemap path/to/sitemap.xml
+```bash
+# Analyze with sitemap
+python-seo-analyzer https://www.example.com/ --sitemap path/to/sitemap.xml
+
+# Generate HTML report
+python-seo-analyzer https://www.example.com/ --output-format html
+
+# Run with AI analysis
+ANTHROPIC_API_KEY="your_key" python-seo-analyzer https://www.example.com/ --run-llm-analysis
+
+# Analyze only specific URL (don't follow links)
+python-seo-analyzer https://www.example.com/ --no-follow-links
+
+# Include heading analysis
+python-seo-analyzer https://www.example.com/ --analyze-headings
 ```
 
-HTML output can be generated from the analysis instead of json.
+## 🔧 Python API
 
-```sh
-python-seo-analyzer http://www.domain.com/ --output-format html
+The `analyze` function returns a comprehensive dictionary with crawl results:
+
+```python
+from pyseoanalyzer import analyze
+
+# Basic analysis
+result = analyze("https://example.com")
+print(result)
 ```
 
-API
+### Advanced API Usage
+
+```python
+from pyseoanalyzer import analyze
+
+# Full analysis with all options
+result = analyze(
+    site="https://example.com",
+    sitemap="path/to/sitemap.xml",
+    analyze_headings=True,
+    analyze_extra_tags=True,
+    follow_links=True  # Set to False for single-page analysis
+)
+
+# Access specific results
+print(f"SEO Score: {result['seo_score']}")
+print(f"Issues Found: {len(result['issues'])}")
+print(f"Recommendations: {result['recommendations']}")
+```
+
+### Running as Module
+
+```bash
+# Generate HTML report
+python -m pyseoanalyzer https://example.com -f html > results.html
+
+# JSON output with AI analysis
+python -m pyseoanalyzer https://example.com --run-llm-analysis
+```
+
+## 🤖 AI-Powered Analysis
+
+Web SEO Inspector uses Anthropic's Claude AI to provide intelligent content analysis and optimization recommendations.
+
+### Setup AI Analysis
+
+1. **Get an API key** from [Anthropic](https://www.anthropic.com/)
+
+2. **Set the environment variable**:
+   ```bash
+   # Option 1: Export in terminal
+   export ANTHROPIC_API_KEY="your_api_key_here"
+   
+   # Option 2: Create .env file
+   echo "ANTHROPIC_API_KEY=your_api_key_here" > .env
+   ```
+
+3. **Run analysis with AI**:
+   ```bash
+   python-seo-analyzer https://example.com --run-llm-analysis
+   ```
+
+### AI Features
+
+- 📝 **Content Quality Assessment**: Evaluates expertise, authority, and trustworthiness
+- 🎯 **Optimization Recommendations**: Specific, actionable improvement suggestions
+- 📊 **Competitive Analysis**: Insights based on industry best practices
+- 🔍 **Semantic Analysis**: Understanding of content context and relevance
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `ANTHROPIC_API_KEY` | Anthropic API key for AI analysis | For AI features |
+| `SEO_ANALYZER_PORT` | Web server port (default: 5000) | No |
+| `SEO_ANALYZER_HOST` | Web server host (default: localhost) | No |
+
+### Configuration File
+
+Create a `config.json` file for advanced settings:
+
+```json
+{
+  "max_pages": 100,
+  "timeout": 30,
+  "user_agent": "Web-SEO-Inspector/1.0",
+  "follow_redirects": true,
+  "analyze_images": true,
+  "check_mobile_friendly": true
+}
+```
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**SSL Certificate Errors**
+```bash
+# Try using HTTP instead of HTTPS
+python-seo-analyzer http://example.com
+```
+
+**Connection Timeouts**
+```bash
+# Increase timeout
+python-seo-analyzer https://example.com --timeout 60
+```
+
+**Memory Issues with Large Sites**
+```bash
+# Limit pages analyzed
+python-seo-analyzer https://example.com --max-pages 50
+```
+
+### Getting Help
+
+- 📖 Check the [documentation](https://github.com/sethblack/python-seo-analyzer/wiki)
+- 🐛 Report bugs on [GitHub Issues](https://github.com/sethblack/python-seo-analyzer/issues)
+- 💬 Join discussions in [GitHub Discussions](https://github.com/sethblack/python-seo-analyzer/discussions)
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how to get started:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes** and add tests
+4. **Run tests**: `python -m pytest`
+5. **Submit a pull request**
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/sethblack/python-seo-analyzer.git
+cd python-seo-analyzer
+
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Run tests
+python -m pytest
+
+# Start development server
+python -m pyseoanalyzer.api --debug
+```
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Inspired by modern SEO best practices and AI search optimization
+- Built with ❤️ by the open-source community
+- Special thanks to all [contributors](https://github.com/sethblack/python-seo-analyzer/graphs/contributors)
+
 ---
 
-The `analyze` function returns a dictionary with the results of the crawl.
-
-```python
-from pyseoanalyzer import analyze
-
-output = analyze(site, sitemap)
-
-print(output)
-```
-
-In order to analyze heading tags (h1-h6) and other extra additional tags as well, the following options can be passed to the `analyze` function
-```python
-from pyseoanalyzer import analyze
-
-output = analyze(site, sitemap, analyze_headings=True, analyze_extra_tags=True)
-
-print(output)
-```
-
-By default, the `analyze` function analyzes all the existing inner links as well, which might be time consuming.
-This default behaviour can be changed to analyze only the provided URL by passing the following option to the `analyze` function
-```python
-from pyseoanalyzer import analyze
-
-output = analyze(site, sitemap, follow_links=False)
-
-print(output)
-```
-
-Alternatively, you can run the analysis as a script from the seoanalyzer folder.
-
-```sh
-python -m seoanalyzer https://www.sethserver.com/ -f html > results.html
-```
-
-AI Optimization
----------------
-
-The first pass of AI optimization features use Anthropic's `claude-3-sonnet-20240229` model to evaluate the content of the site. You will need to have an API key from [Anthropic](https://www.anthropic.com/) to use this feature. The API key needs to be set as the environment variable `ANTHROPIC_API_KEY`. I recommend using a `.env` file to set this variable. Once the API key is set, the AI optimization features can be enabled with the `--run-llm-analysis` flag.
-
-Notes
------
-
-If you get `requests.exceptions.SSLError` at either the command-line or via the python-API, try using:
- - http://www.foo.bar
- 
- **instead** of..
- 
- -  https://www.foo.bar
+**Made with ❤️ for the SEO community**

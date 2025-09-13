@@ -1,6 +1,7 @@
 import time
 from operator import itemgetter
 from .website import Website
+from .seo_optimizer import enhance_analysis_with_optimization
 
 
 def calc_total_time(start_time):
@@ -84,4 +85,7 @@ def analyze(
 
     output["total_time"] = calc_total_time(start_time)
 
-    return output
+    # 添加SEO优化建议
+    enhanced_output = enhance_analysis_with_optimization(output)
+    
+    return enhanced_output

@@ -456,50 +456,20 @@
             document.getElementById('totalKeywords').textContent = keywordsData.length;
             document.getElementById('analysisTime').textContent = '刚刚';
             
-            // Update SEO score from API response
-            if (result.seo_score) {
-                const score = Math.round(result.seo_score.score);
-                document.getElementById('seoScore').textContent = score;
-                
-                // Update color based on score
-                const scoreElement = document.getElementById('seoScore');
-                scoreElement.className = scoreElement.className.replace(/text-\w+-600/g, '');
-                if (score >= 80) {
-                    scoreElement.className += ' text-green-600';
-                } else if (score >= 60) {
-                    scoreElement.className += ' text-yellow-600';
-                } else {
-                    scoreElement.className += ' text-red-600';
-                }
-            }
-            
             // Update alerts
             updateAlerts(result.seo_insights);
             
             // Update recommendations
             updateRecommendations(result.seo_insights);
             
-            // Update TODO list with optimization tasks
-            if (result.seo_insights && result.seo_insights.recommendations) {
-                updateTodoList(result.seo_insights.recommendations);
-            } else if (result.seo_insights && result.seo_insights.issues) {
-                // Convert issues to TODO format
-                const todoIssues = result.seo_insights.issues.map(issue => ({
-                    title: issue.type || issue.title || '优化任务',
-                    priority: issue.severity === 'high' ? 'high' : issue.severity === 'medium' ? 'medium' : 'low',
-                    category: 'SEO优化',
-                    description: issue.description || '需要优化的SEO问题',
-                    action: issue.suggestion || '请查看详细说明并进行优化',
-                    time_estimate: '15-30分钟'
-                }));
-                updateTodoList(todoIssues);
-            }
-            
             // Update page analysis table
             updatePageAnalysis();
             
             // Update keyword analysis
             updateKeywordAnalysis();
+            
+            // Calculate and update SEO score
+            calculateSEOScore();
         }
 
         function updateAlerts(seoInsights) {
