@@ -1,5 +1,9 @@
 beautifulsoup4==4.13.3
 certifi==2025.1.31
+google-api-python-client==2.155.0
+google-auth==2.37.0
+google-auth-oauthlib==1.2.1
+google-auth-httplib2==0.2.0
 Jinja2==3.1.6
 langchain==0.3.22
 langchain-anthropic==0.3.10
@@ -10,3 +14,6 @@ pytest-mock==3.14.0 # Added for testing
 python-dotenv==1.1.0
 trafilatura==2.0.0
 urllib3==2.5.0
+APScheduler==3.10.4
+pydantic==2.10.4
+aiohttp==3.9.1

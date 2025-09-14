@@ -23,7 +23,7 @@ Web SEO Inspector is a modern SEO and GEO (Generative AI Engine Optimization) an
 
 ## ✨ Key Features
 
-- 🤖 **AI-Powered Analysis**: Uses Anthropic's Claude to evaluate content quality and provide optimization recommendations
+- 🤖 **AI-Powered Analysis**: Uses Anthropic's Claude or Silicon Flow API to evaluate content quality and provide optimization recommendations
 - 🌐 **Web Interface**: Modern, responsive dashboard for interactive SEO analysis
 - 📊 **Comprehensive Reports**: Technical SEO, content analysis, and performance metrics
 - 🎯 **Smart Recommendations**: Actionable insights with priority-based task management
@@ -59,7 +59,7 @@ The AI features are influenced by modern SEO best practices and the evolving lan
 # Basic analysis
 python-seo-analyzer https://example.com
 
-# With AI analysis (requires ANTHROPIC_API_KEY)
+# With AI analysis (requires ANTHROPIC_API_KEY or SILICONFLOW_API_KEY)
 python-seo-analyzer https://example.com --run-llm-analysis
 
 # Generate HTML report
@@ -92,9 +92,11 @@ docker run --rm sethblack/python-seo-analyzer http://example.com/
 # Note: If the sitemap is local, you'll need to mount it (see mounting example below)
 docker run --rm sethblack/python-seo-analyzer http://example.com/ --sitemap /path/inside/container/sitemap.xml --output-format html
 
-# Run with AI analysis (requires ANTHROPIC_API_KEY)
-# Replace "your_api_key_here" with your actual Anthropic API key
+# Run with AI analysis (requires ANTHROPIC_API_KEY or SILICONFLOW_API_KEY)
+# Replace "your_api_key_here" with your actual API key
 docker run --rm -e ANTHROPIC_API_KEY="your_api_key_here" sethblack/python-seo-analyzer http://example.com/ --run-llm-analysis
+# Or use Silicon Flow API
+docker run --rm -e SILICONFLOW_API_KEY="your_siliconflow_api_key_here" sethblack/python-seo-analyzer http://example.com/ --run-llm-analysis
 
 # Save HTML output to your local machine
 # This mounts the current directory (.) into /app/output inside the container.
@@ -160,6 +162,8 @@ python-seo-analyzer https://www.example.com/ --output-format html
 
 # Run with AI analysis
 ANTHROPIC_API_KEY="your_key" python-seo-analyzer https://www.example.com/ --run-llm-analysis
+# Or use Silicon Flow API
+SILICONFLOW_API_KEY="your_key" python-seo-analyzer https://www.example.com/ --run-llm-analysis
 
 # Analyze only specific URL (don't follow links)
 python-seo-analyzer https://www.example.com/ --no-follow-links
@@ -212,7 +216,10 @@ python -m pyseoanalyzer https://example.com --run-llm-analysis
 
 ## 🤖 AI-Powered Analysis
 
-Web SEO Inspector uses Anthropic's Claude AI to provide intelligent content analysis and optimization recommendations.
+Web SEO Inspector supports multiple AI providers to provide intelligent content analysis and optimization recommendations:
+
+- **Anthropic Claude**: High-quality analysis with Claude-3-Sonnet model
+- **Silicon Flow (硅基流动)**: Cost-effective Chinese AI service with multiple model options
 
 ### Setup AI Analysis
 
@@ -220,11 +227,19 @@ Web SEO Inspector uses Anthropic's Claude AI to provide intelligent content anal
 
 2. **Set the environment variable**:
    ```bash
-   # Option 1: Export in terminal
+   # Option 1: Use Anthropic Claude
    export ANTHROPIC_API_KEY="your_api_key_here"
    
-   # Option 2: Create .env file
+   # Option 2: Use Silicon Flow (硅基流动)
+   export SILICONFLOW_API_KEY="sk-omysgcreevtaaengykwkmqkreqmukmolgzexkwfnainhwttb"
+   # Optional: Specify model (default: Qwen/Qwen2.5-VL-72B-Instruct)
+   export SILICONFLOW_MODEL="Qwen/Qwen2.5-VL-72B-Instruct"
+   
+   # Option 3: Create .env file
    echo "ANTHROPIC_API_KEY=your_api_key_here" > .env
+   # Or
+   echo "SILICONFLOW_API_KEY=your_siliconflow_api_key_here" > .env
+   echo "SILICONFLOW_MODEL=Qwen/Qwen2.5-VL-72B-Instruct" >> .env
    ```
 
 3. **Run analysis with AI**:
@@ -239,6 +254,13 @@ Web SEO Inspector uses Anthropic's Claude AI to provide intelligent content anal
 - 📊 **Competitive Analysis**: Insights based on industry best practices
 - 🔍 **Semantic Analysis**: Understanding of content context and relevance
 
+### Supported AI Models
+
+| Provider | Model | Language Focus | Cost | Performance |
+|----------|-------|----------------|------|-----------|
+| Anthropic Claude | claude-3-sonnet-20240229 | English | Higher | Excellent |
+| Silicon Flow | Qwen/Qwen2.5-VL-72B-Instruct | Chinese/English | Lower | Excellent |
+
 ## ⚙️ Configuration
 
 ### Environment Variables
@@ -246,8 +268,14 @@ Web SEO Inspector uses Anthropic's Claude AI to provide intelligent content anal
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `ANTHROPIC_API_KEY` | Anthropic API key for AI analysis | For AI features |
+| `SILICONFLOW_API_KEY` | Silicon Flow API key for AI analysis | Alternative AI provider |
+| `GOOGLE_ANALYTICS_VIEW_ID` | Universal Analytics 视图ID | Optional* |
+| `GOOGLE_ANALYTICS_MEASUREMENT_ID` | Google Analytics 4 测量ID | Optional* |
+| `GOOGLE_SEARCH_CONSOLE_URL` | Search Console 属性URL | Required |
 | `SEO_ANALYZER_PORT` | Web server port (default: 5000) | No |
 | `SEO_ANALYZER_HOST` | Web server host (default: localhost) | No |
+
+*注：至少需要配置一个 Analytics ID（Universal Analytics 或 GA4）
 
 ### Configuration File
 

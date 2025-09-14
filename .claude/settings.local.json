@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python3:*)",
+      "Bash(source:*)",
+      "Bash(python:*)",
+      "Bash(node -e \"console.log(''JavaScript syntax check passed'')\")",
+      "Bash(ss -tlnp)",
+      "Bash(netstat -tlnp)",
+      "Bash(curl -s -I http://localhost:5000/)",
+      "Bash(curl -s http://localhost:5000/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/)",
+      "Bash(wget -q -O- http://127.0.0.1:5000/)",
+      "Bash(wget -q -O- http://127.0.0.1:5000/api/health)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

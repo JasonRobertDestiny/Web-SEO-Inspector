@@ -542,67 +542,93 @@
             if (currentAnalysisResult && currentAnalysisResult.optimization) {
                 const optimization = currentAnalysisResult.optimization;
                 
-                // 创建优化建议的HTML结构
+                // 创建简化的优化建议HTML结构
                 container.innerHTML = `
-                    <div class="space-y-6">
+                    <div class="space-y-4">
                         <!-- 优化概览 -->
-                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
                                 <i class="fas fa-chart-pie text-blue-500 mr-2"></i>
                                 优化概览
                             </h3>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <div class="text-center">
-                                    <div class="text-2xl font-bold text-red-600">${optimization.summary.critical_issues}</div>
-                                    <div class="text-sm text-gray-600">关键问题</div>
+                                    <div class="text-xl font-bold text-red-600">${optimization.summary.critical_issues}</div>
+                                    <div class="text-xs text-gray-600">关键问题</div>
                                 </div>
                                 <div class="text-center">
-                                    <div class="text-2xl font-bold text-orange-600">${optimization.summary.high_issues}</div>
-                                    <div class="text-sm text-gray-600">高优先级</div>
+                                    <div class="text-xl font-bold text-orange-600">${optimization.summary.high_issues}</div>
+                                    <div class="text-xs text-gray-600">高优先级</div>
                                 </div>
                                 <div class="text-center">
-                                    <div class="text-2xl font-bold text-yellow-600">${optimization.summary.medium_issues}</div>
-                                    <div class="text-sm text-gray-600">中优先级</div>
+                                    <div class="text-xl font-bold text-yellow-600">${optimization.summary.medium_issues}</div>
+                                    <div class="text-xs text-gray-600">中优先级</div>
                                 </div>
                                 <div class="text-center">
-                                    <div class="text-2xl font-bold text-blue-600">${optimization.summary.estimated_time}</div>
-                                    <div class="text-sm text-gray-600">预估时间</div>
+                                    <div class="text-xl font-bold text-blue-600">${optimization.summary.estimated_time}</div>
+                                    <div class="text-xs text-gray-600">预估时间</div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- 立即行动项 -->
-                        <div class="bg-white border border-red-200 rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
-                                立即行动项
+                        <!-- 快速胜利项目 -->
+                        <div class="bg-white border border-green-200 rounded-lg p-4">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-star text-green-500 mr-2"></i>
+                                快速胜利 (${optimization.recommendations.quick_wins.length}项)
                             </h3>
-                            <div id="immediateActions" class="space-y-3">
-                                ${optimization.recommendations.immediate_actions.map(action => `
-                                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                        <div class="flex items-start justify-between">
-                                            <div class="flex-1">
-                                                <div class="flex items-center mb-2">
-                                                    <span class="text-lg mr-2">${action.priority_icon}</span>
-                                                    <h4 class="font-medium text-gray-900">${action.title}</h4>
-                                                    <span class="ml-2 px-2 py-1 text-xs rounded-full" style="background-color: ${action.priority_color}20; color: ${action.priority_color}">
-                                                        ${action.priority}
-                                                    </span>
-                                                </div>
-                                                <p class="text-sm text-gray-600 mb-2">${action.description}</p>
-                                                <p class="text-sm font-medium text-blue-600 mb-3">${action.action}</p>
-                                                <div class="text-xs text-gray-500">
-                                                    <span class="mr-4"><i class="fas fa-clock mr-1"></i>${action.time_estimate}</span>
-                                                    <span><i class="fas fa-tag mr-1"></i>${action.category}</span>
-                                                </div>
-                                            </div>
-                                            <button onclick="showImplementationDetails('${action.id}')" class="ml-4 text-blue-600 hover:text-blue-800 text-sm">
-                                                <i class="fas fa-info-circle"></i>
-                                            </button>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                ${optimization.recommendations.quick_wins.slice(0, 4).map(action => `
+                                    <div class="border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-shadow">
+                                        <div class="flex items-center mb-2">
+                                            <span class="text-sm mr-2">⚡</span>
+                                            <h4 class="font-medium text-gray-900 text-sm">${action.title}</h4>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mb-2">${action.description}</p>
+                                        <div class="text-xs text-gray-500">
+                                            <span class="mr-3"><i class="fas fa-clock mr-1"></i>${action.time_estimate}</span>
+                                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full">${action.category}</span>
                                         </div>
                                     </div>
                                 `).join('')}
                             </div>
+                            ${optimization.recommendations.quick_wins.length > 4 ? `
+                                <button onclick="showAllQuickWins()" class="mt-3 text-sm text-blue-600 hover:text-blue-800">
+                                    查看全部 ${optimization.recommendations.quick_wins.length} 项快速胜利 →
+                                </button>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- 重要项目 -->
+                        <div class="bg-white border border-orange-200 rounded-lg p-4">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-project-diagram text-orange-500 mr-2"></i>
+                                重要项目 (${optimization.recommendations.major_projects.length}项)
+                            </h3>
+                            <div class="space-y-2">
+                                ${optimization.recommendations.major_projects.slice(0, 3).map(action => `
+                                    <div class="border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-shadow">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex-1">
+                                                <div class="flex items-center mb-1">
+                                                    <span class="text-sm mr-2">🎯</span>
+                                                    <h4 class="font-medium text-gray-900 text-sm">${action.title}</h4>
+                                                </div>
+                                                <p class="text-xs text-gray-600">${action.description}</p>
+                                            </div>
+                                            <div class="text-xs text-gray-500 text-right">
+                                                <div><i class="fas fa-clock mr-1"></i>${action.time_estimate}</div>
+                                                <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded-full">${action.category}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${optimization.recommendations.major_projects.length > 3 ? `
+                                <button onclick="showAllMajorProjects()" class="mt-3 text-sm text-blue-600 hover:text-blue-800">
+                                    查看全部 ${optimization.recommendations.major_projects.length} 项重要项目 →
+                                </button>
+                            ` : ''}
                         </div>
                         
                         <!-- 优先级矩阵 -->
@@ -615,11 +641,11 @@
                                 <div class="border border-green-200 rounded-lg p-4 bg-green-50">
                                     <h4 class="font-medium text-green-800 mb-2 flex items-center">
                                         <i class="fas fa-star text-green-600 mr-2"></i>
-                                        快速胜利 (${optimization.recommendations.priority_matrix.quick_wins.length})
+                                        快速胜利 (${optimization.recommendations.quick_wins.length})
                                     </h4>
                                     <p class="text-sm text-green-700 mb-3">高影响，低工作量</p>
                                     <div class="space-y-2">
-                                        ${optimization.recommendations.priority_matrix.quick_wins.slice(0, 3).map(item => `
+                                        ${optimization.recommendations.quick_wins.slice(0, 3).map(item => `
                                             <div class="text-sm text-green-800">• ${item.title}</div>
                                         `).join('')}
                                     </div>
@@ -628,11 +654,11 @@
                                 <div class="border border-orange-200 rounded-lg p-4 bg-orange-50">
                                     <h4 class="font-medium text-orange-800 mb-2 flex items-center">
                                         <i class="fas fa-project-diagram text-orange-600 mr-2"></i>
-                                        重大项目 (${optimization.recommendations.priority_matrix.major_projects.length})
+                                        重大项目 (${optimization.recommendations.major_projects.length})
                                     </h4>
                                     <p class="text-sm text-orange-700 mb-3">高影响，高工作量</p>
                                     <div class="space-y-2">
-                                        ${optimization.recommendations.priority_matrix.major_projects.slice(0, 3).map(item => `
+                                        ${optimization.recommendations.major_projects.slice(0, 3).map(item => `
                                             <div class="text-sm text-orange-800">• ${item.title}</div>
                                         `).join('')}
                                     </div>
@@ -642,10 +668,97 @@
                     </div>
                 `;
                 
-                // 更新TODO列表
+                // 更新TODO列表（去重后的优化建议）
                 updateTodoList(optimization.issues);
-                
-            } else if (seoInsights && seoInsights.recommendations && seoInsights.recommendations.length > 0) {
+            }
+        }
+        
+        function updateTodoList(issues) {
+            if (!issues || issues.length === 0) {
+                document.getElementById('todoContainer').innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-clipboard-list text-4xl mb-4"></i>
+                        <p>暂无优化任务</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 去重逻辑：基于标题和类别去重
+            const uniqueIssues = [];
+            const seenKeys = new Set();
+            
+            issues.forEach(issue => {
+                const key = `${issue.title}-${issue.category}`;
+                if (!seenKeys.has(key)) {
+                    seenKeys.add(key);
+                    uniqueIssues.push(issue);
+                }
+            });
+            
+            // 清空现有TODO列表并添加新的优化任务
+            todoList = uniqueIssues.map(issue => ({
+                id: todoIdCounter++,
+                text: issue.title,
+                priority: issue.priority,
+                category: issue.category,
+                description: issue.description,
+                action: issue.action,
+                timeEstimate: issue.time_estimate,
+                completed: false,
+                createdAt: new Date().toISOString()
+            }));
+            
+            renderTodoListWithCategories();
+        }
+        
+        // TODO List Management
+        let todoList = [];
+        let todoIdCounter = 1;
+        
+        function updateTodoList(issues) {
+            if (!issues || issues.length === 0) {
+                document.getElementById('todoContainer').innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-clipboard-list text-4xl mb-4"></i>
+                        <p>暂无优化任务</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 去重逻辑：基于标题和类别去重
+            const uniqueIssues = [];
+            const seenKeys = new Set();
+            
+            issues.forEach(issue => {
+                const key = `${issue.title}-${issue.category}`;
+                if (!seenKeys.has(key)) {
+                    seenKeys.add(key);
+                    uniqueIssues.push(issue);
+                }
+            });
+            
+            // 清空现有TODO列表并添加新的优化任务
+            todoList = uniqueIssues.map(issue => ({
+                id: todoIdCounter++,
+                text: issue.title,
+                priority: issue.priority,
+                category: issue.category,
+                description: issue.description,
+                action: issue.action,
+                timeEstimate: issue.time_estimate,
+                completed: false,
+                createdAt: new Date().toISOString()
+            }));
+            
+            renderTodoListWithCategories();
+        }
+        
+        // 更新TODO列表
+        updateTodoList(optimization.issues);
+        
+        if (seoInsights && seoInsights.recommendations && seoInsights.recommendations.length > 0) {
                 // 兼容旧格式
                 const list = document.createElement('ul');
                 list.className = 'space-y-3';
@@ -653,12 +766,14 @@
                 seoInsights.recommendations.forEach(rec => {
                     const li = document.createElement('li');
                     li.className = 'flex items-start space-x-3 p-3 bg-gray-50 rounded-lg';
+                    const priorityColor = rec.priority === 'high' ? 'red' : 'yellow';
+                    const priorityClasses = `bg-${priorityColor}-100 text-${priorityColor}-800`;
                     li.innerHTML = `
                         <i class="fas fa-lightbulb text-yellow-500 mt-1"></i>
                         <div>
                             <h4 class="font-medium text-gray-900">${rec.recommendation}</h4>
                             <p class="text-sm text-gray-600">${rec.url}</p>
-                            <span class="inline-block mt-2 px-2 py-1 text-xs bg-${rec.priority === 'high' ? 'red' : 'yellow'}-100 text-${rec.priority === 'high' ? 'red' : 'yellow'}-800 rounded">${rec.priority}</span>
+                            <span class="inline-block mt-2 px-2 py-1 text-xs ${priorityClasses} rounded">${rec.priority}</span>
                         </div>
                     `;
                     list.appendChild(li);
@@ -669,7 +784,7 @@
             } else {
                 container.innerHTML = '<p class="text-gray-600">请先进行SEO分析以获取优化建议</p>';
             }
-        }
+        
 
         function updatePageAnalysis() {
             if (pagesData.length === 0) return;
@@ -687,6 +802,8 @@
                 const statusClass = warningsCount === 0 ? 'green' : warningsCount <= 2 ? 'yellow' : 'red';
                 const statusText = warningsCount === 0 ? '良好' : warningsCount <= 2 ? '需要关注' : '严重';
                 const statusIcon = warningsCount === 0 ? 'check' : warningsCount <= 2 ? 'exclamation-triangle' : 'times-circle';
+                const statusClasses = `bg-${statusClass}-100 text-${statusClass}-800`;
+                const iconClass = `fas fa-${statusIcon}`;
                 
                 row.innerHTML = `
                     <td class="px-6 py-4">
@@ -697,13 +814,13 @@
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-900">${page.word_count || 0}</td>
                     <td class="px-6 py-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${statusClass}-100 text-${statusClass}-800">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClasses}">
                             ${warningsCount} 个问题
                         </span>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${statusClass}-100 text-${statusClass}-800">
-                            <i class="fas fa-${statusIcon} mr-1"></i>${statusText}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClasses}">
+                            <i class="${iconClass} mr-1"></i>${statusText}
                         </span>
                     </td>
                     <td class="px-6 py-4">
@@ -909,38 +1026,162 @@
             URL.revokeObjectURL(url);
         }
 
-        // TODO List Management
-        let todoList = [];
-        let todoIdCounter = 1;
-        
-        function updateTodoList(issues) {
-            if (!issues || issues.length === 0) {
-                document.getElementById('todoContainer').innerHTML = `
+        function renderTodoListWithCategories() {
+            const container = document.getElementById('todoContainer');
+            
+            if (todoList.length === 0) {
+                container.innerHTML = `
                     <div class="text-center text-gray-500 py-8">
                         <i class="fas fa-clipboard-list text-4xl mb-4"></i>
-                        <p>暂无优化任务</p>
+                        <p>暂无待办任务</p>
                     </div>
                 `;
+                updateTodoStats();
                 return;
             }
             
-            // 清空现有TODO列表并添加新的优化任务
-            todoList = issues.map(issue => ({
-                id: todoIdCounter++,
-                text: issue.title,
-                priority: issue.priority,
-                category: issue.category,
-                description: issue.description,
-                action: issue.action,
-                timeEstimate: issue.time_estimate,
-                completed: false,
-                createdAt: new Date().toISOString()
-            }));
+            // 按类别分组
+            const categories = {};
+            todoList.forEach(todo => {
+                if (!categories[todo.category]) {
+                    categories[todo.category] = [];
+                }
+                categories[todo.category].push(todo);
+            });
             
-            renderTodoList();
+            // 类别图标和颜色映射
+            const categoryConfig = {
+                '内容优化': { icon: 'fas fa-edit', color: 'blue' },
+                '技术SEO': { icon: 'fas fa-cogs', color: 'green' },
+                '性能优化': { icon: 'fas fa-tachometer-alt', color: 'purple' },
+                '用户体验': { icon: 'fas fa-users', color: 'orange' },
+                '链接建设': { icon: 'fas fa-link', color: 'indigo' },
+                '移动优化': { icon: 'fas fa-mobile-alt', color: 'pink' },
+                '自定义': { icon: 'fas fa-user-edit', color: 'gray' }
+            };
+            
+            container.innerHTML = '';
+            Object.keys(categories).forEach(categoryName => {
+                const todos = categories[categoryName];
+                const config = categoryConfig[categoryName] || categoryConfig['自定义'];
+                const completedCount = todos.filter(t => t.completed).length;
+                
+                // 创建类别容器
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'mb-6 border border-gray-200 rounded-lg overflow-hidden';
+                
+                // 创建类别头部
+                const headerDiv = document.createElement('div');
+                headerDiv.className = `bg-${config.color}-50 border-b border-${config.color}-200 px-4 py-3`;
+                headerDiv.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="${config.icon} text-${config.color}-600"></i>
+                            <h3 class="font-semibold text-${config.color}-800">${categoryName}</h3>
+                            <span class="bg-${config.color}-200 text-${config.color}-800 px-2 py-1 rounded-full text-xs font-medium">
+                                ${completedCount}/${todos.length}
+                            </span>
+                        </div>
+                        <button onclick="toggleCategory('${categoryName}')" class="text-${config.color}-600 hover:text-${config.color}-800">
+                            <i class="fas fa-chevron-down category-toggle" data-category="${categoryName}"></i>
+                        </button>
+                    </div>
+                `;
+                
+                // 创建内容容器
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'category-content';
+                contentDiv.setAttribute('data-category', categoryName);
+                
+                // 按优先级排序
+                const sortedTodos = todos.sort((a, b) => {
+                    if (a.completed !== b.completed) {
+                        return a.completed ? 1 : -1;
+                    }
+                    const priorityOrder = { 'critical': 0, 'high': 1, 'medium': 2, 'low': 3 };
+                    return priorityOrder[a.priority] - priorityOrder[b.priority];
+                });
+                
+                sortedTodos.forEach(todo => {
+                    const priorityColors = {
+                        'critical': 'bg-red-100 text-red-800 border-red-200',
+                        'high': 'bg-orange-100 text-orange-800 border-orange-200',
+                        'medium': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                        'low': 'bg-blue-100 text-blue-800 border-blue-200'
+                    };
+                    
+                    const priorityIcons = {
+                        'critical': '🔥',
+                        'high': '⚡',
+                        'medium': '⚠️',
+                        'low': '📝'
+                    };
+                    
+                    const todoDiv = document.createElement('div');
+                    const todoClasses = `p-4 border-b border-gray-100 last:border-b-0 ${todo.completed ? 'opacity-60 bg-gray-50' : 'bg-white'} hover:bg-gray-50 transition-all`;
+                    const titleClasses = `text-sm font-medium text-gray-900 ${todo.completed ? 'line-through' : ''}`;
+                    const priorityClass = priorityColors[todo.priority];
+                    todoDiv.className = todoClasses;
+                    todoDiv.innerHTML = `
+                        <div class="flex items-start space-x-3">
+                            <input type="checkbox" ${todo.completed ? 'checked' : ''} 
+                                   onchange="toggleTodo(${todo.id})" 
+                                   class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="${titleClasses}">
+                                        ${todo.title}
+                                    </h4>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${priorityClass}">
+                                            ${priorityIcons[todo.priority]} ${todo.priority}
+                                        </span>
+                                        <button onclick="deleteTodo(${todo.id})" class="text-red-500 hover:text-red-700">
+                                            <i class="fas fa-trash text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-2 ${titleClasses.includes('line-through') ? 'line-through' : ''}">
+                                    ${todo.description}
+                                </p>
+                                <div class="flex items-center justify-between text-xs text-gray-500">
+                                    <span>预估时间: ${todo.estimatedTime}</span>
+                                    <span>创建时间: ${new Date(todo.createdAt).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    contentDiv.appendChild(todoDiv);
+                });
+                
+                categoryDiv.appendChild(headerDiv);
+                categoryDiv.appendChild(contentDiv);
+                container.appendChild(categoryDiv);
+            });
+            updateTodoStats();
+        }
+        
+        function toggleCategory(categoryName) {
+            const content = document.querySelector(`[data-category="${categoryName}"]`);
+            const icon = document.querySelector(`[data-category="${categoryName}"]`).previousElementSibling.querySelector('.category-toggle');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-chevron-down');
+            } else {
+                content.style.display = 'none';
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-right');
+            }
         }
         
         function renderTodoList() {
+            // 保持向后兼容
+            renderTodoListWithCategories();
+        }
+        
+        function renderTodoListOld() {
             const container = document.getElementById('todoContainer');
             
             if (todoList.length === 0) {
@@ -978,8 +1219,9 @@
                     'low': '📝'
                 };
                 
+                const todoContainerClasses = `border border-gray-200 rounded-lg p-4 mb-3 ${todo.completed ? 'opacity-60 bg-gray-50' : 'bg-white'} hover:shadow-md transition-all`;
                 return `
-                    <div class="border border-gray-200 rounded-lg p-4 mb-3 ${todo.completed ? 'opacity-60 bg-gray-50' : 'bg-white'} hover:shadow-md transition-all">
+                    <div class="${todoContainerClasses}">
                         <div class="flex items-start space-x-3">
                             <input type="checkbox" ${todo.completed ? 'checked' : ''} 
                                    onchange="toggleTodo(${todo.id})" 

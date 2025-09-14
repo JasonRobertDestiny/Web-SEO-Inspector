@@ -9,8 +9,11 @@ from typing import Dict, List, Optional
 import asyncio
 import json
 import os
+import logging
+from .siliconflow_llm import SiliconFlowLLM
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 
 # Pydantic models for structured output
@@ -57,15 +60,41 @@ class SEORecommendations(BaseModel):
 
 
 class LLMSEOEnhancer:
-    def __init__(self):
-        self.llm = ChatAnthropic(
-            model="claude-3-sonnet-20240229",
-            anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY"),
-            temperature=0,
-            timeout=30,
-            max_retries=3,
-        )
-        self._setup_chains()
+    """Enhanced SEO analyzer using Claude or Silicon Flow for intelligent insights."""
+    
+    def __init__(self, api_key: Optional[str] = None, use_siliconflow: bool = False, siliconflow_api_key: Optional[str] = None, siliconflow_model: Optional[str] = None):
+        """
+        Initialize the LLM SEO enhancer.
+        
+        Args:
+            api_key: Anthropic API key (defaults to ANTHROPIC_API_KEY env var)
+            use_siliconflow: Whether to use Silicon Flow API instead of Anthropic
+            siliconflow_api_key: Silicon Flow API key (defaults to SILICONFLOW_API_KEY env var)
+            siliconflow_model: Silicon Flow model to use (defaults to SILICONFLOW_MODEL env var or Qwen/Qwen2.5-VL-72B-Instruct)
+        """
+        self.use_siliconflow = use_siliconflow or bool(os.getenv("SILICONFLOW_API_KEY"))
+        
+        if self.use_siliconflow:
+            # Get model from parameter, env var, or default
+            model = siliconflow_model or os.getenv("SILICONFLOW_MODEL", "Qwen/Qwen2.5-VL-72B-Instruct")
+            self.siliconflow_llm = SiliconFlowLLM(siliconflow_api_key, model)
+            self.llm = None
+        else:
+            self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+            if not self.api_key:
+                raise ValueError("Anthropic API key is required. Set ANTHROPIC_API_KEY environment variable.")
+            
+            self.llm = ChatAnthropic(
+                model="claude-3-sonnet-20240229",
+                anthropic_api_key=self.api_key,
+                temperature=0,
+                timeout=30,
+                max_retries=3,
+            )
+            self.siliconflow_llm = None
+        
+        if not self.use_siliconflow:
+            self._setup_chains()
 
     def _setup_chains(self):
         """Setup modern LangChain runnable sequences using pipe syntax"""
@@ -225,40 +254,51 @@ class LLMSEOEnhancer:
         """
         Enhanced SEO analysis using modern LangChain patterns
         """
-        # Convert seo_data to string for prompt insertion
-        seo_data_str = json.dumps(seo_data, indent=2)
+        try:
+            if self.use_siliconflow:
+                # Use Silicon Flow API for analysis
+                return await self.siliconflow_llm.analyze_seo_data(seo_data, "comprehensive")
+            else:
+                # Use Anthropic Claude for analysis
+                # Convert seo_data to string for prompt insertion
+                seo_data_str = json.dumps(seo_data, indent=2)
 
-        # Run analysis chains in parallel
-        entity_results, credibility_results, conversation_results, platform_results = (
-            await asyncio.gather(
-                self.entity_chain.ainvoke(seo_data_str),
-                self.credibility_chain.ainvoke(seo_data_str),
-                self.conversation_chain.ainvoke(seo_data_str),
-                self.platform_chain.ainvoke(seo_data_str),
-            )
-        )
+                # Run analysis chains in parallel
+                entity_results, credibility_results, conversation_results, platform_results = (
+                    await asyncio.gather(
+                        self.entity_chain.ainvoke(seo_data_str),
+                        self.credibility_chain.ainvoke(seo_data_str),
+                        self.conversation_chain.ainvoke(seo_data_str),
+                        self.platform_chain.ainvoke(seo_data_str),
+                    )
+                )
 
-        # Combine analyses
-        combined_analysis = {
-            "entity_analysis": entity_results.model_dump(),
-            "credibility_analysis": credibility_results.model_dump(),
-            "conversation_analysis": conversation_results.model_dump(),
-            "cross_platform_presence": platform_results.model_dump(),
-        }
+                # Combine analyses
+                combined_analysis = {
+                    "entity_analysis": entity_results.model_dump(),
+                    "credibility_analysis": credibility_results.model_dump(),
+                    "conversation_analysis": conversation_results.model_dump(),
+                    "cross_platform_presence": platform_results.model_dump(),
+                }
 
-        # Generate final recommendations
-        recommendations = await self.recommendations_chain.ainvoke(
-            json.dumps(combined_analysis, indent=2)
-        )
+                # Generate final recommendations
+                recommendations = await self.recommendations_chain.ainvoke(
+                    json.dumps(combined_analysis, indent=2)
+                )
 
-        # Combine all results
-        final_results = {
-            **seo_data,
-            **combined_analysis,
-            "recommendations": recommendations.model_dump(),
-        }
+                # Combine all results
+                final_results = {
+                    **seo_data,
+                    **combined_analysis,
+                    "recommendations": recommendations.model_dump(),
+                }
 
-        return self._format_output(final_results)
+                return self._format_output(final_results)
+                
+        except Exception as e:
+            logger.error(f"Error in LLM analysis: {e}")
+            # Return original data if LLM analysis fails
+            return seo_data
 
     def _format_output(self, raw_analysis: Dict) -> Dict:
         """Format analysis results into a clean, structured output"""

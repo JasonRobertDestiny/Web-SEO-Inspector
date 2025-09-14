@@ -10,6 +10,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pyseoanalyzer.analyzer import analyze
+from pyseoanalyzer.seo_optimizer import SEOOptimizer
 from pyseoanalyzer.llm_analyst import enhanced_modern_analyze
 
 app = Flask(__name__, template_folder='templates', static_folder='templates')
@@ -237,11 +238,17 @@ def api_analyze():
         # 计算SEO评分
         seo_score = calculate_seo_score(analysis_result, seo_analysis)
         
+        # 使用SEO优化器生成详细的优化建议
+        optimizer = SEOOptimizer()
+        pages_data = analysis_result.get('pages', [])
+        optimization_plan = optimizer.generate_optimization_plan(pages_data)
+        
         # 合并结果
         result = {
             'analysis': analysis_result,
             'seo_insights': seo_analysis,
             'seo_score': seo_score,
+            'optimization': optimization_plan,
             'timestamp': datetime.now().isoformat()
         }
         
@@ -282,4 +289,6 @@ def health_check():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # 根据环境变量决定是否启用调试模式
+    debug_mode = os.environ.get('FLASK_ENV', 'development') == 'development'
+    app.run(debug=debug_mode, host='0.0.0.0', port=5000)

@@ -1,0 +1,281 @@
+name: SEO Agent Automated Analysis
+
+on:
+  schedule:
+    # Run SEO analysis every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+    # Allow manual trigger
+    inputs:
+      website_url:
+        description: 'Website URL to analyze'
+        required: true
+        default: 'https://example.com'
+      run_llm_analysis:
+        description: 'Run enhanced LLM analysis'
+        type: boolean
+        default: true
+      enable_google_integration:
+        description: 'Enable Google Analytics/Search Console integration'
+        type: boolean
+        default: false
+
+env:
+  PYTHON_VERSION: '3.8'
+
+jobs:
+  seo-analysis:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e .
+    
+    - name: Set environment variables
+      run: |
+        echo "ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" >> $GITHUB_ENV
+        echo "GOOGLE_ANALYTICS_VIEW_ID=${{ secrets.GOOGLE_ANALYTICS_VIEW_ID }}" >> $GITHUB_ENV
+        echo "GOOGLE_SEARCH_CONSOLE_URL=${{ secrets.GOOGLE_SEARCH_CONSOLE_URL }}" >> $GITHUB_ENV
+    
+    - name: Run SEO Analysis
+      env:
+        WEBSITE_URL: ${{ github.event.inputs.website_url || 'https://example.com' }}
+        RUN_LLM_ANALYSIS: ${{ github.event.inputs.run_llm_analysis || true }}
+        ENABLE_GOOGLE_INTEGRATION: ${{ github.event.inputs.enable_google_integration || false }}
+      run: |
+        python -c "
+        import asyncio
+        import json
+        from pyseoanalyzer.automation import SEOAgentAutomation, AutomationConfig
+        from datetime import datetime
+        
+        # Configuration
+        config = AutomationConfig(
+            website_url='${{ env.WEBSITE_URL }}',
+            sitemap_url=None,
+            analysis_schedule='0 9 * * 1',
+            google_integration_enabled=${{ env.ENABLE_GOOGLE_INTEGRATION }},
+            llm_analysis_enabled=${{ env.RUN_LLM_ANALYSIS }},
+            notifications_enabled=False
+        )
+        
+        # Run analysis
+        async def run_analysis():
+            automation = SEOAgentAutomation(config)
+            await automation.run_scheduled_analysis()
+            
+            # Get latest results
+            latest = automation.get_latest_analysis()
+            if latest and latest['status'] == 'completed':
+                # Save results to file
+                with open('seo_analysis_results.json', 'w') as f:
+                    json.dump(latest, f, indent=2, default=str)
+                print('Analysis completed successfully')
+                print(f'Execution time: {latest[\"execution_time\"]:.2f} seconds')
+                
+                # Print summary
+                results = latest['results']
+                if 'recommendations' in results:
+                    summary = results['recommendations']['summary']
+                    print(f'Total actions: {summary.get(\"total_actions\", 0)}')
+                    print(f'High impact actions: {summary.get(\"high_impact_actions\", 0)}')
+                    print(f'Quick wins: {summary.get(\"quick_wins\", 0)}')
+            else:
+                print('Analysis failed')
+                if latest:
+                    print(f'Error: {latest.get(\"error_message\", \"Unknown error\")}')
+        
+        asyncio.run(run_analysis())
+        "
+    
+    - name: Upload results as artifact
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: seo-analysis-results
+        path: |
+          seo_analysis_results.json
+        retention-days: 30
+    
+    - name: Create analysis report
+      if: always()
+      run: |
+        if [ -f "seo_analysis_results.json" ]; then
+          python -c "
+          import json
+          from datetime import datetime
+          
+          with open('seo_analysis_results.json', 'r') as f:
+              results = json.load(f)
+          
+          # Create markdown report
+          report = f'''# SEO Analysis Report
+          
+**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
+**Website:** {results['website_url']}
+**Analysis ID:** {results['analysis_id']}
+**Status:** {results['status']}
+**Execution Time:** {results['execution_time']:.2f} seconds
+          
+          '''
+          
+          if results['status'] == 'completed':
+              analysis_results = results['results']
+              
+              # Add basic metrics
+              pages_count = len(analysis_results.get('pages', []))
+              keywords_count = len(analysis_results.get('keywords', []))
+              errors_count = len(analysis_results.get('errors', []))
+              
+              report += f'''
+## Basic Metrics
+- **Pages Analyzed:** {pages_count}
+- **Keywords Found:** {keywords_count}
+- **Errors Found:** {errors_count}
+              
+              '''
+              
+              # Add recommendations if available
+              if 'recommendations' in analysis_results:
+                  recs = analysis_results['recommendations']
+                  summary = recs['summary']
+                  
+                  report += f'''
+## Summary
+- **Total Actions:** {summary.get('total_actions', 0)}
+- **High Impact Actions:** {summary.get('high_impact_actions', 0)}
+- **Quick Wins:** {summary.get('quick_wins', 0)}
+- **Total Effort Required:** {summary.get('total_effort_hours', 0)} hours
+                  
+## Top Recommendations
+                  '''
+                  
+                  # Show top 5 recommendations
+                  for i, action in enumerate(recs['recommendations'][:5]):
+                      report += f'''
+{i+1}. **{action['title']}**
+   - **Priority:** {action['priority']}
+   - **Effort:** {action['estimated_effort']} hours
+   - **Impact:** {action['estimated_impact']:.1%}
+   - **Description:** {action['description']}
+                      '''
+              
+              # Add timeline
+              if 'implementation_plan' in recs:
+                  timeline = recs['implementation_plan']['timeline']
+                  report += f'''
+## Implementation Timeline
+- **Total Duration:** {timeline.get('total_months', 0)} months
+- **Immediate Actions:** {timeline.get('immediate', {}).get('duration_weeks', 0)} weeks
+- **Short Term:** {timeline.get('short_term', {}).get('duration_weeks', 0)} weeks
+- **Medium Term:** {timeline.get('medium_term', {}).get('duration_weeks', 0)} weeks
+- **Long Term:** {timeline.get('long_term', {}).get('duration_weeks', 0)} weeks
+                  '''
+          
+          else:
+              report += f'''
+## Analysis Failed
+**Error:** {results.get('error_message', 'Unknown error')}
+          '''
+          
+          # Write report
+          with open('seo_analysis_report.md', 'w') as f:
+              f.write(report)
+          
+          print('Report generated: seo_analysis_report.md')
+          "
+        fi
+    
+    - name: Upload report as artifact
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: seo-analysis-report
+        path: |
+          seo_analysis_report.md
+        retention-days: 30
+    
+    - name: Send notification (if configured)
+      if: success() && env.SLACK_WEBHOOK_URL != ''
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      run: |
+        python -c "
+        import json
+        import requests
+        from datetime import datetime
+        
+        webhook_url = '${{ env.SLACK_WEBHOOK_URL }}'
+        
+        if webhook_url:
+            with open('seo_analysis_results.json', 'r') as f:
+                results = json.load(f)
+            
+            if results['status'] == 'completed':
+                analysis_results = results['results']
+                summary = analysis_results.get('recommendations', {}).get('summary', {})
+                
+                message = {
+                    'text': f'🔍 SEO Analysis Completed for {results[\"website_url\"]}',
+                    'attachments': [{
+                        'color': 'good',
+                        'fields': [
+                            {'title': 'Status', 'value': '✅ Success', 'short': True},
+                            {'title': 'Execution Time', 'value': f'{results[\"execution_time\"]:.1f}s', 'short': True},
+                            {'title': 'Total Actions', 'value': str(summary.get('total_actions', 0)), 'short': True},
+                            {'title': 'Quick Wins', 'value': str(summary.get('quick_wins', 0)), 'short': True}
+                        ]
+                    }]
+                }
+                
+                response = requests.post(webhook_url, json=message)
+                if response.status_code == 200:
+                    print('Slack notification sent successfully')
+                else:
+                    print(f'Failed to send Slack notification: {response.status_code}')
+        "
+    
+    - name: Commit reports to repository (optional)
+      if: success() && github.event_name == 'workflow_dispatch'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add seo_analysis_results.json seo_analysis_report.md
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "🤖 SEO Analysis Report - $(date '+%Y-%m-%d')"
+          git push
+        fi
+
+  # Optional: Deploy to staging environment
+  deploy-staging:
+    needs: seo-analysis
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Add your deployment commands here
+        echo "Deployment completed"
