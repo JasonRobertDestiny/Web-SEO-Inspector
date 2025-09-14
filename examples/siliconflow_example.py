@@ -34,11 +34,10 @@ load_dotenv()
 async def main():
     """Main example function."""
     # Configuration
-    SILICONFLOW_API_KEY = "sk-omysgcreevtaaengykwkmqkreqmukmolgzexkwfnainhwttb"  # Your Silicon Flow API key
     MODEL = "Qwen/Qwen2.5-VL-72B-Instruct"  # Advanced vision-language model
     
     # Check if Silicon Flow API key is available
-    siliconflow_key = SILICONFLOW_API_KEY or os.getenv("SILICONFLOW_API_KEY")
+    siliconflow_key = os.getenv("SILICONFLOW_API_KEY")
     if not siliconflow_key:
         print("❌ SILICONFLOW_API_KEY not found in environment variables.")
         print("Please set your Silicon Flow API key:")

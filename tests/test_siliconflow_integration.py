@@ -85,11 +85,11 @@ class TestSiliconFlowLLM:
         llm = SiliconFlowLLM(api_key="test_key")
         
         # Mock the _make_request method
-        mock_response = '{
+        mock_response = """{
             "entity_assessment": "Good entity optimization",
             "knowledge_panel_readiness": 85,
             "key_improvements": ["Add schema markup", "Improve entity mentions"]
-        }'
+        }"""
         
         with patch.object(llm, '_make_request', return_value=mock_response):
             seo_data = {"title": "Test Page", "meta_description": "Test description"}

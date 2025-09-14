@@ -210,59 +210,203 @@ def calculate_seo_score(analysis_result, seo_analysis):
         'status': 'excellent' if score >= 90 else 'good' if score >= 70 else 'needs_improvement'
     }
     
-    print(f"Debug: Returning score result: {result}")
-    return result
+def calculate_seo_score_fast(analysis_result):
+    """快速计算SEO分数 - 优化版本"""
+    if not analysis_result or not analysis_result.get('pages'):
+        return {'score': 50, 'grade': 'D', 'status': 'needs_improvement'}
+    
+    page = analysis_result['pages'][0]
+    score = 100
+    issues = {'high': 0, 'medium': 0, 'low': 0}
+    
+    # 快速评分算法（简化版本）
+    # 标题检查
+    title = page.get('title', '')
+    if not title:
+        score -= 15
+        issues['high'] += 1
+    elif len(title) < 30 or len(title) > 60:
+        score -= 5
+        issues['medium'] += 1
+    
+    # 描述检查
+    description = page.get('description', '')
+    if not description:
+        score -= 20
+        issues['high'] += 1
+    elif len(description) < 120:
+        score -= 10
+        issues['high'] += 1
+    
+    # H1检查
+    h1_tags = page.get('h1', [])
+    if not h1_tags:
+        score -= 15
+        issues['high'] += 1
+    
+    # 图片Alt检查
+    images = page.get('images', [])
+    missing_alt = sum(1 for img in images if not img.get('alt'))
+    if missing_alt > 0:
+        score -= min(missing_alt * 3, 15)
+        issues['high'] += min(missing_alt, 5)
+    
+    # 确保分数不低于0
+    score = max(score, 0)
+    
+    # 确定等级和状态
+    if score >= 90:
+        grade = 'A+'
+        status = 'excellent'
+    elif score >= 80:
+        grade = 'A'
+        status = 'good'
+    elif score >= 70:
+        grade = 'B'
+        status = 'fair'
+    elif score >= 60:
+        grade = 'C'
+        status = 'needs_improvement'
+    else:
+        grade = 'D'
+        status = 'critical'
+    
+    return {
+        'score': score,
+        'grade': grade,
+        'status': status,
+        'issues': issues
+    }
+
+def generate_quick_recommendations(analysis_result):
+    """快速生成SEO建议 - 优化版本"""
+    if not analysis_result or not analysis_result.get('pages'):
+        return []
+    
+    page = analysis_result['pages'][0]
+    recommendations = []
+    
+    # 标题建议
+    title = page.get('title', '')
+    if not title:
+        recommendations.append({
+            'type': 'critical',
+            'category': 'Title',
+            'message': 'Missing page title - Add a unique, descriptive title tag',
+            'priority': 'high',
+            'impact': 'high'
+        })
+    elif len(title) < 30:
+        recommendations.append({
+            'type': 'warning',
+            'category': 'Title', 
+            'message': f'Title is too short ({len(title)} characters) - Expand to 50-60 characters',
+            'priority': 'medium',
+            'impact': 'medium'
+        })
+    
+    # 描述建议
+    description = page.get('description', '')
+    if not description:
+        recommendations.append({
+            'type': 'critical',
+            'category': 'Description',
+            'message': 'Missing meta description - Add a compelling 120-160 character description',
+            'priority': 'high',
+            'impact': 'high'
+        })
+    elif len(description) < 120:
+        recommendations.append({
+            'type': 'critical',
+            'category': 'Description',
+            'message': f'Description too short ({len(description)} characters) - Expand to 120-160 characters',
+            'priority': 'high',
+            'impact': 'medium'
+        })
+    
+    # H1建议
+    h1_tags = page.get('h1', [])
+    if not h1_tags:
+        recommendations.append({
+            'type': 'critical',
+            'category': 'Headings',
+            'message': 'Missing H1 tag - Add a clear, keyword-rich main heading',
+            'priority': 'high',
+            'impact': 'high'
+        })
+    
+    # 图片Alt建议
+    images = page.get('images', [])
+    missing_alt = sum(1 for img in images if not img.get('alt'))
+    if missing_alt > 0:
+        recommendations.append({
+            'type': 'critical',
+            'category': 'Images',
+            'message': f'{missing_alt} images missing alt attributes - Add descriptive alt text',
+            'priority': 'high',
+            'impact': 'medium'
+        })
+    
+    return recommendations[:10]  # 限制返回前10个建议
 
 @app.route('/api/analyze', methods=['POST'])
 def api_analyze():
-    """分析网站SEO并返回结果"""
+    """分析网站SEO并返回结果 - 优化版本"""
     try:
         data = request.get_json()
         url = data.get('url')
         
         if not url:
-            return jsonify({'error': '缺少URL参数'}), 400
+            return jsonify({'error': 'Missing URL parameter'}), 400
         
-        # 执行SEO分析
+        # 记录开始时间
+        start_time = time.time()
+        
+        # 第一阶段：基础分析（快速执行）
         analysis_result = analyze(
             url=url,
             sitemap_url=data.get('sitemap'),
-            follow_links=data.get('follow_links', True),
-            analyze_headings=data.get('analyze_headings', True),
-            analyze_extra_tags=data.get('analyze_extra_tags', True)
+            follow_links=False,  # 禁用链接跟踪以提高速度
+            analyze_headings=True,
+            analyze_extra_tags=True
         )
         
-        # 生成SEO预警和建议
-        seo_analysis = analyze_seo_issues(analysis_result)
+        # 第二阶段：计算基础指标（轻量级）
+        seo_score = calculate_seo_score_fast(analysis_result)
         
-        # 计算SEO评分
-        seo_score = calculate_seo_score(analysis_result, seo_analysis)
+        # 第三阶段：生成核心建议（优化版本）
+        recommendations = generate_quick_recommendations(analysis_result)
         
-        # 使用SEO优化器生成详细的优化建议
-        optimizer = SEOOptimizer()
-        pages_data = analysis_result.get('pages', [])
-        optimization_plan = optimizer.generate_optimization_plan(pages_data)
+        # 计算执行时间
+        execution_time = time.time() - start_time
         
-        # 合并结果
+        # 返回优化后的结果
         result = {
             'analysis': analysis_result,
-            'seo_insights': seo_analysis,
             'seo_score': seo_score,
-            'optimization': optimization_plan,
+            'recommendations': recommendations,
+            'performance': {
+                'execution_time': round(execution_time, 2),
+                'optimized': True
+            },
             'timestamp': datetime.now().isoformat()
         }
         
         return jsonify(result)
     
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Analysis error: {str(e)}")  # 调试输出
+        return jsonify({'error': f'Analysis failed: {str(e)}'}), 500
 
 @app.route('/api/recommendations', methods=['GET'])
 def get_recommendations():
-    """获取SEO建议列表"""
+    """获取SEO建议列表 - 仅在有分析数据时返回"""
+    # Only return recommendations if there's analysis data
+    # This prevents showing example data on initial page load
     return jsonify({
-        'recommendations': list(SEO_RECOMMENDATIONS.values()),
-        'categories': ['content', 'technical', 'performance', 'accessibility']
+        'recommendations': [],  # Empty by default
+        'categories': ['content', 'technical', 'performance', 'accessibility'],
+        'message': '请先进行SEO分析以获取个性化建议'
     })
 
 @app.route('/api/thresholds', methods=['GET', 'POST'])
