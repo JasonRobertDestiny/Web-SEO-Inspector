@@ -1,18 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pip install:*)",
-      "Bash(python3:*)",
-      "Bash(source:*)",
-      "Bash(python:*)",
-      "Bash(node -e \"console.log(''JavaScript syntax check passed'')\")",
-      "Bash(ss -tlnp)",
-      "Bash(netstat -tlnp)",
-      "Bash(curl -s -I http://localhost:5000/)",
-      "Bash(curl -s http://localhost:5000/)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/)",
-      "Bash(wget -q -O- http://127.0.0.1:5000/)",
-      "Bash(wget -q -O- http://127.0.0.1:5000/api/health)"
+      "Bash(find . -name \"*.py\" -not -path \"./venv/*\" -exec python -m py_compile {})",
+      "Bash(tree -I 'venv|.git|__pycache__' -a)",
+      "Bash(curl -s -X POST http://127.0.0.1:5000/api/analyze -H \"Content-Type: application/json\" -d '{\"\"\"\"url\"\"\"\":\"\"\"\"https://example.com\"\"\"\"}')",
+      "Bash(git add pyseoanalyzer/templates/seo_styles.css pyseoanalyzer/templates/seo_agent.js pyseoanalyzer/templates/index.html pyseoanalyzer/api.py)",
+      "Bash(git add tests/test_siliconflow_integration.py examples/siliconflow_example.py)",
+      "Bash(git commit -m \"$(cat <<''EOF''\n🎨 Major UI/UX Enhancement: Professional SEO Analysis Interface\n\n✨ Core Improvements:\n• Fixed complete dark/light theme switching across entire interface\n• Redesigned professional SEO analysis interface matching industry standards\n• Enhanced glassmorphism design with CSS variables system\n• Optimized performance - eliminated 25% freeze issue during analysis\n\n🔧 Technical Enhancements:\n• Comprehensive CSS variables system for consistent theming\n• Advanced animations and micro-interactions\n• Responsive design with mobile-first approach\n• Professional loading states and progress indicators\n\n🛡️ Security Fixes:\n• Removed hardcoded API keys from example files\n• Fixed syntax errors in test files\n• Enhanced error handling and validation\n\n🚀 Performance Optimizations:\n• Streamlined API analysis process\n• Fast SEO scoring algorithm\n• Optimized recommendation generation\n• Reduced analysis time significantly\n\n🎯 User Experience:\n• Complete theme toggle functionality (nav, cards, backgrounds, text)\n• Professional branding with \"SEO Genius\" identity\n• Intuitive navigation with section switching\n• Enhanced visual feedback and animations\n\n🤖 Generated with Claude Code (claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push)",
+      "Bash(git config --global http.proxy http://127.0.0.1:10090)",
+      "Bash(git config --global https.proxy http://127.0.0.1:10090)",
+      "Bash(git config --list)",
+      "Bash(git add .env.example)",
+      "Bash(git commit -m \"🔒 Security Fix: Remove actual credentials from .env.example\n\n- Replace real Google OAuth credentials with placeholder values\n- Fix GitHub push protection violations\n- Ensure sensitive data is not committed to repository\n\n🤖 Generated with Claude Code (claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")",
+      "Bash(git add .)"
     ],
     "deny": [],
     "ask": []

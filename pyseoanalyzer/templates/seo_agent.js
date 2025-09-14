@@ -82,8 +82,8 @@ class SEOAgent {
     initUsageTracking() {
         const usageText = document.getElementById('usageText');
         if (usageText) {
-            const todayUsage = this.getTodayUsage();
-            usageText.textContent = `You have ${3 - todayUsage} / 3 free checks left for today.`;
+            // Free to use - no restrictions
+            usageText.textContent = 'Unlimited FREE analysis • No signup required';
         }
     }
 
@@ -297,10 +297,7 @@ class SEOAgent {
             return;
         }
 
-        if (this.getTodayUsage() >= 3) {
-            this.showAlert('Daily free analysis limit reached, please try again tomorrow', 'warning');
-            return;
-        }
+        // Usage limit removed - free to use without restrictions
 
         this.showLoading(true);
         
@@ -335,7 +332,7 @@ class SEOAgent {
             
             await new Promise(resolve => setTimeout(resolve, 800)); // Final pause for completion effect
             
-            this.incrementUsage();
+            // Usage tracking removed - unlimited free service
             
             this.currentAnalysis = result;
             
